@@ -468,6 +468,7 @@ function makeOutputIndexHtml(accountInfo) {
           <div id="output"></div>
         </div>
       </div>
+      <p>This site was made with <a href="https://tinysubversions.com/twitter-archive/make-your-own/">this Twitter archiving tool</a>.</p>
     </div>
   </div>
 </body>
