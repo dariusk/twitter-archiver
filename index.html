@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <script>
+    window.YTD = {
+      tweets: {},
+    };
+  </script>
+  <script src="FileSaver.min.js"></script>
+  <script src="jszip.js"></script>
+  <style>
+    noscript {
+      color: red;
+    }
+    body {
+      margin: 16px;
+      max-width: 800px;
+      font-family: sans-serif;
+      font-size: 1.2em;
+    }
+    pre {
+      font-size: 1.2em;
+    }
+    .input {
+      font-size: 1.5em;
+      margin-top: 16px;
+    }
+    #baseUrl {
+      font-size: 1.5em;
+      width: 600px;
+      margin-top: 16px;
+      display: block;
+    }
+    summary {
+      cursor: pointer;
+    }
+		@keyframes spinner {
+			to {transform: rotate(360deg);}
+		}
+    .spinner {
+      position: relative;
+    }
+		.spinner:before {
+			content: '';
+			box-sizing: border-box;
+			position: absolute;
+      top: 8px;
+			left: 8px;
+			width: 20px;
+			height: 20px;
+			margin-top: -10px;
+			margin-left: -10px;
+			border-radius: 50%;
+			border: 2px solid #ccc;
+			border-top-color: #000;
+			animation: spinner .6s linear infinite;
+		}
+    li {
+      margin-top: 8px;
+    }
+    h2 {
+      margin-bottom: 0;
+    }
+    .byline {
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<p><a href="/">&larr; Home</a></p>
+<h2>Make your own simple, public, searchable Twitter archive</h2>
+<p class="byline"><em>by Darius Kazemi</em></p>
+<p>Hello! Hopefully you are here because you want to make an archive of your tweets <a href="https://tinysubversions.com/twitter-archive/">like this one</a>. There are options for this like <a href="https://github.com/tweetback/tweetback">Tweetback</a> but you have to have some computer programming knowledge to run that. I wanted to make something very simple. The process for this is:</p>
+<ul>
+  <li>fill out a small form here</li>
+  <li>drop your twitter archive zip file into this page</li>
+  <li>wait</li>
+  <li>get back a zip file with a bunch of HTML files in it that you can upload wherever you host your web stuff now</li>
+</ul>
+<p>This even works if you only have access to your website through something like cPanel. Basically if the way you update your website is by uploading files to a web host, then this solution is a good one for you! Once it's uploaded, there is a styles.css file that should be pretty easy to modify if you want to customize things.</p>
+<p>Note: your browser will process the whole thing so if it's huge and/or your computer is slow... be prepared to wait a long while. Nothing is uploaded anywhere. You might get a notification that your tab is slowing your browser down. Just wait a while, you'll get an "archive.zip" in your downloads bar. It'll be over soon. Just like Twitter.</p>
+<h3>Privacy notice</h3>
+<ul>
+  <li><em>NO uploading happens in this entire process</em>. Your data stays with you, on the computer where you are running this. When you attach your archive it stays on your computer, running in a local browser app.</li>
+  <li>The archive that it spits out will contain your original, public tweets, and any replies that you made to tweets you have authored (so, threads that you made).</li>
+  <li>The archive that it spits out will contain no DMs or even any public replies to other people's content (these public replies lack context and I didn't want to open that ethical can of worms here).</li>
+  <li>The archive will not contain any private media such as photos you sent via DM.</li>
+  <li>The archive will not contain "moments", "co-tweets", "spaces", or any other non-basic tweet content.</li>
+</ul>
+<h3>Known problems</h3>
+<ul>
+  <li>This won't work if your archive is "too big". This varies by browser, but <strong>if your zip file is over 2GB it might not work</strong>. If you are having trouble with this (it gets stuck on the "starting..." message), you could consider: unzipping locally, moving the /data/tweets_media directory somewhere else, rezipping (making sure that /data directory is on the zip root), putting the new, smaller zip into this thing, getting the resulting zip, and then re-adding the /data/tweets_media directory. Unfortunately this will include media for your retweets (but nothing private) so it'll take up a ton of disk space. <strong><em>I am sorry this isn't easier, it's a browser limitation on file sizes.</em></strong> </li>
+  <li>If you are encountering bugs, please <a href="https://docs.google.com/forms/d/e/1FAIpQLScBbu22VFAN-hMABqNRVMLED0JI3sMCSLtmLpnomY-I4AJ5Jg/viewform">contact me via my contact form</a>. I can't promise I will get back to you as this is a free service I provide because I'm trying to be helpful and nice.</li>
+</ul>
+<h3>Okay now let's make this archive</h3>
+<p>
+  <p>
+    <input type="checkbox" id="disable-directories" name="disable-directories" />
+    <label for="disable-directories">Disable one-directory-per-tweet (not recommended but maybe needed for older filesystems)</label> 
+    <details>
+      <summary>(click for more info about one-directory-per-tweet)</summary>
+      <p id="filesystems">Some filesystems complain if you have more than ~65k subdirectories in a directory, so my original plan of having tweets live at /{username}/status/{id}/index.html (and resolved to /{username}/status/{id}/) didn't work. Instead all the files live at /{username}/status/{id}.html, so a single directory with thousands of files in it, and you are going to have to provide a .htaccess file or whatever the nginx equivalent directive is to rewrite status/foo/ to status/foo.html. Sorry! <a href="htaccess.txt">This is the .htaccess file I used, if it helps.</a></p>
+    </details>
+    <p>
+  </p>
+  <span>Please enter the <strong>base URL</strong> where this will be hosted. This is required if OpenGraph previews (link previews that unfurl in places like Slack and Mastodon) are going to work properly. So if you want a tweet to live at <pre>https://example.com/mytwitterbackup/USERNAME/status/ID/</pre>, then you'll want the text box to have <pre>https://example.com/mytwitterbackup</pre> in it. <em>If you only plan to host this on your own hard drive, then don't worry about this field. It only matters if you want to share these links online with people.</em></span>
+  <input type="text" id="baseUrl" placeholder="https://example.com/mytwitterbackup"/>
+</p>
+<p>
+  <span>Now select your .zip file you downloaded from Twitter. Press the "Make my archive" button and the process will begin.</span>
+  <input id="file" class="input" type="file" id="file" name="file" /><br />
+  <noscript><strong>HEY! You need JavaScript enabled for this to work!!!</strong></noscript>
+  <button class="input" onclick="parseZip()">Make my archive</button><div class="spinner" id="loading" hidden>&nbsp;</div>
+  <div id="output">
+  </div>
+</p>
+
+</body>
+  <script src="app.js"></script>
+</html>
