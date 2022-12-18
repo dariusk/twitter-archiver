@@ -94,7 +94,7 @@
 </ul>
 <h3>Known problems</h3>
 <ul>
-  <li>This won't work if your archive is "too big". This varies by browser, but <strong>if your zip file is over 2GB it might not work</strong>. If you are having trouble with this (it gets stuck on the "starting..." message), you could consider: unzipping locally, moving the /data/tweets_media directory somewhere else, rezipping (making sure that /data directory is on the zip root), putting the new, smaller zip into this thing, getting the resulting zip, and then re-adding the /data/tweets_media directory. Unfortunately this will include media for your retweets (but nothing private) so it'll take up a ton of disk space. <strong><em>I am sorry this isn't easier, it's a browser limitation on file sizes.</em></strong> </li>
+  <li>This won't work if your archive is "too big". This varies by browser, but <strong>if your zip file is over 2GB it might not work</strong>. If you are having trouble with this (it gets stuck on the "starting..." message), you could consider: unzipping locally, moving the /data/tweets_media directory somewhere else, rezipping (making sure that /data directory is on the zip root), putting the new, smaller zip into this thing, getting the resulting zip, and then re-adding the /data/tweets_media directory (it needs to live at "[username]/tweets_media" in the resulting archive). Unfortunately, this will include media for your retweets (but nothing private) so it'll take up a ton of disk space. <strong><em>I am sorry this isn't easier, it's a browser limitation on file sizes.</em></strong> </li>
   <li>Please, don't try to do this on a mobile phone. You'll probably overheat the poor thing.</li>
   <li>If you have unzipped your archive file from Twitter and you threw away the zip, you can re-zip it and try using this tool. The biggest problem I have seen with this is that some zip creator tools add a new directory at the root. Please make sure that your /data directory is at the root of the zip, so when you look at the contents you don't see some other folder you click through before you can see "/data". I am sorry that filesystems are bad.</li>
   <li>If you encounter bugs, please <a href="https://docs.google.com/forms/d/e/1FAIpQLScBbu22VFAN-hMABqNRVMLED0JI3sMCSLtmLpnomY-I4AJ5Jg/viewform">contact me via my contact form</a>. I can't promise I will get back to you as this is a free tool I provide because I'm trying to be helpful and nice.</li>
@@ -103,7 +103,7 @@
 <p>
   <p>
     <input type="checkbox" id="disable-directories" name="disable-directories" />
-    <label for="disable-directories">Disable one-directory-per-tweet (not recommended but maybe needed for older filesystems)</label> 
+    <label for="disable-directories">Disable one-directory-per-tweet (not recommended but maybe needed for older filesystems)</label>
     <details>
       <summary>(click for more info about one-directory-per-tweet)</summary>
       <p id="filesystems">Some filesystems (like ext2 specifically) complain if you have more than ~65k subdirectories in a directory, so my original plan of having tweets live at /{username}/status/{id}/index.html (and resolved to /{username}/status/{id}/) doesn't work on those filesystems. Instead all the files live at /{username}/status/{id}.html, so a single directory with thousands of files in it, and you are going to have to provide a .htaccess file or whatever the nginx equivalent directive is to rewrite status/foo/ to status/foo.html. Sorry! <a href="htaccess.txt">This is the .htaccess file I used, if it helps.</a></p>
