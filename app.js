@@ -379,7 +379,12 @@ function parseZip() {
         const $output = document.getElementById('output');
         document.getElementById('loading').hidden = true;
         $output.innerHTML = `<p class="error">Error! ${error.toString()}</p>`;
-        $output.innerHTML += `<p>I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.</p>`;
+        if (error.toString().includes('TypeError')) {
+          $output.innerHTML += `<p>I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.</p>`;
+        }
+        if (error.toString().includes('Corrupted')) {
+          $output.innerHTML += `<p>I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.</p>`;
+        }
       });
   }
   let files = document.getElementById('file').files;
