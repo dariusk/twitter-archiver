@@ -172,7 +172,6 @@ body {
   margin: 0 auto;
   word-wrap: break-word;
 }
-
 .flex-wrap {
   display: flex;
   flex-direction: column;
@@ -249,6 +248,48 @@ body {
     height: 15vh;
     width: 15vh;
     flex-grow: 1;
+  }
+}
+@media(prefers-color-scheme: dark) {
+  body {
+    background-color: black;
+    color: white;
+  }
+  a {
+    color: #33ff00;
+    text-decoration: none;
+  }
+  a:hover {
+    color: #33ff00;
+    text-decoration: underline;
+  }
+  .tweet {
+    background-color: black;
+    border: 1px solid gray; /*#33ff00;*/
+    border-radius: 5px;
+  }
+  .child {
+    background-color: black;
+  }
+  .parent {
+    background-color: black;
+  }
+  button {
+    background-color: black;
+    color: white;
+  }
+  input {
+    background-color: black;
+    color: white;
+  }
+  .tweet .favorite_count {
+    color: #33ff00;
+  }
+  .tweet .retweet_count {
+    color: #33ff00;
+  }
+  .tweet .created_at {
+    color: #33ff00;
   }
 }
 `;
