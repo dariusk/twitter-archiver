@@ -1,0 +1,10 @@
+# Redirect 301 index.html index2.html
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+?)/$ /twitter-archive/tinysubversions/status/$1 [R=302,NE,L]
+
+# If requested resource exists as a file or directory go to it
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)/?$ /twitter-archive/tinysubversions/status/$1.html [QSA]
