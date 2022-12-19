@@ -375,6 +375,11 @@ function parseZip() {
             });
           });
         });
+      }).catch(error => {
+        const $output = document.getElementById('output');
+        document.getElementById('loading').hidden = true;
+        $output.innerHTML = `<p class="error">Error! ${error.toString()}</p>`;
+        $output.innerHTML += `<p>I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.</p>`;
       });
   }
   let files = document.getElementById('file').files;
