@@ -438,19 +438,34 @@ function makeOutputAppJs(accountInfo) {
   const outputAppJs = `
 let results;
 
-var index = elasticlunr(function () {
-  this.addField('full_text');
-  this.setRef('id_str');
+var index = new FlexSearch.Document({
+	encode: function(str){
+		const cjkItems = str.replace(/[\\x00-\\x7F]/g, "").split("");
+		const asciiItems = str.toLowerCase().split(/\\W+/);
+		return cjkItems.concat(asciiItems);
+  },
+  document: {
+    id: "id_str",
+    index: ["full_text"],
+    store: true
+  }
 });
+
 
 const searchInput = document.getElementById('search-input');
 
 function processData(data) {
+  for (doc of data) {
+    index.add({
+        id_str: doc.id_str,
+        created_at: doc.created_at,
+        full_text: doc.full_text,
+        favorite_count: doc.favorite_count,
+        retweet_count: doc.retweet_count
+    })
+  };
   document.getElementById('loading').hidden = true;
   document.getElementById('search').hidden = false;
-  for (doc of data) {
-    index.addDoc(doc);
-  }
 }
 
 processData(searchDocuments);
@@ -458,37 +473,43 @@ processData(searchDocuments);
 function sortResults(criterion) {
   if (criterion === 'newest-first') {
     results = results.sort(function(a,b){
-      return new Date(b.doc.created_at) - new Date(a.doc.created_at);
+      return new Date(b.created_at) - new Date(a.created_at);
     });
     renderResults();
   }
   if (criterion === 'oldest-first') {
     results = results.sort(function(a,b){
-      return new Date(a.doc.created_at) - new Date(b.doc.created_at);
+      return new Date(a.created_at) - new Date(b.created_at);
     });
     renderResults();
   }
   if (criterion === 'most-relevant') {
     results = results.sort(function(a,b){
-      return b.score - a.score;
+      return a.index - b.index;
     });
     renderResults();
   }
   if (criterion === 'most-popular') {
     results = results.sort(function(a,b){
-      return (+b.doc.favorite_count + +b.doc.retweet_count) - (+a.doc.favorite_count + +a.doc.retweet_count);
+      return (+b.favorite_count + +b.retweet_count) - (+a.favorite_count + +a.retweet_count);
     });
     renderResults();
   }
 }
 
 function renderResults() {
-  const output = results.map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.doc.id_str}">link</a></div> <div class="search_text">\${item.doc.full_text}</div><div class="search_time">\${new Date(item.doc.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
+  const output = results.map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
   document.getElementById('output').innerHTML = output.join('');
 }
 
 function onSearchChange(e) {
-  results = index.search(e.target.value);
+  results = index.search(e.target.value, { enrich: true });
+  if (results.length > 0) {
+    // limit search results to the top 100 by relevance
+    results = results.slice(0,100);
+    // preserve original search result order in the 'index' variable since that is ordered by relevance
+    results = results[0].result.map((item, index) => { let result = item.doc; result.index = index; return result;});
+  }
   renderResults();
 }
 searchInput.addEventListener('input', onSearchChange);`;
@@ -523,7 +544,7 @@ function makeOutputIndexHtml(accountInfo) {
   </div>
 </body>
 <script src="searchDocuments.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
 <script src="app.js"></script>
 </html>`;
   return outputIndexHtml;
