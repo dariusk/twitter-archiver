@@ -292,7 +292,40 @@ body {
     color: #33ff00;
   }
 }
-`;
+#tabs {
+  margin: -16px 0 0;
+}
+.tab:first-child {
+  margin-left: -16px;
+  border-top-left-radius: 16px;
+}
+.hr {
+  margin: 0 -16px 16px -16px;
+}
+.tab {
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-right: 2px solid black;
+  box-sizing: border-box;
+}
+.tab.active {
+  text-decoration: underline;
+}
+#browse-sort > button {
+  font-size: 1.0em;
+}
+#page-num {
+  font-size: 1.0em;
+  width: 80px;
+}
+#browse-sort {
+  line-height: 1.7em;
+}
+#paging {
+  margin: 8px 0;
+}`;
 }
 
 function parseZip() {
@@ -469,6 +502,9 @@ function processData(data) {
 }
 
 processData(searchDocuments);
+let browseDocuments = searchDocuments.sort(function(a,b){
+  return new Date(b.created_at) - new Date(a.created_at);
+});
 
 function sortResults(criterion) {
   if (criterion === 'newest-first') {
@@ -495,11 +531,32 @@ function sortResults(criterion) {
     });
     renderResults();
   }
+  if (criterion === 'newest-first-browse') {
+    browseDocuments = browseDocuments.sort(function(a,b){
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    renderBrowse();
+  }
+  if (criterion === 'oldest-first-browse') {
+    browseDocuments = browseDocuments.sort(function(a,b){
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
+    renderBrowse();
+  }
+  if (criterion === 'most-popular-browse') {
+    browseDocuments = browseDocuments.sort(function(a,b){
+      return (+b.favorite_count + +b.retweet_count) - (+a.favorite_count + +a.retweet_count);
+    });
+    renderBrowse();
+  }
 }
 
 function renderResults() {
   const output = results.map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
   document.getElementById('output').innerHTML = output.join('');
+  if (results.length > 0) {
+    document.getElementById('output').innerHTML += '<a href="#tabs">top &uarr;</a>';
+  }
 }
 
 function onSearchChange(e) {
@@ -512,7 +569,53 @@ function onSearchChange(e) {
   }
   renderResults();
 }
-searchInput.addEventListener('input', onSearchChange);`;
+searchInput.addEventListener('input', onSearchChange);
+
+function searchTab() {
+  const clickedTab = document.getElementById('search-tab');
+  clickedTab.classList.add('active');
+  const otherTab = document.getElementById('browse-tab');
+  otherTab.classList.remove('active');
+  document.getElementById('browse').hidden = true;
+  document.getElementById('search').hidden = false;
+}
+
+function browseTab() {
+  const clickedTab = document.getElementById('browse-tab');
+  clickedTab.classList.add('active');
+  const otherTab = document.getElementById('search-tab');
+  otherTab.classList.remove('active');
+  const searchContent = document.getElementById('search');
+  document.getElementById('search').hidden = true;
+  document.getElementById('browse').hidden = false;
+}
+
+const pageSize = 50;
+const pageMax = Math.floor(browseDocuments.length/pageSize) + 1;
+let page = 1;
+let browseIndex = (page - 1) * pageSize;
+
+function onPageNumChange(e) {
+  page = e.target.value;
+  browseIndex = (page - 1) * pageSize;
+  renderBrowse();
+}
+
+document.getElementById('page-total').innerText = pageMax;
+document.getElementById('page-num').addEventListener('input', onPageNumChange);
+document.getElementById('page-num').value = +page;
+document.getElementById('page-num').max = pageMax;
+document.getElementById('page-num').min = 1;
+
+function renderBrowse() {
+  const output = browseDocuments.slice(browseIndex, browseIndex + pageSize).map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
+  document.getElementById('browse-output').innerHTML = output.join('');
+  if (results.length > 0) {
+    document.getElementById('browse-output').innerHTML += '<a href="#tabs">top &uarr;</a>';
+  }
+}
+
+renderBrowse();`;
   return outputAppJs;
 }
 
@@ -532,11 +635,20 @@ function makeOutputIndexHtml(accountInfo) {
       <h1>Welcome to the @${accountInfo.userName} Twitter archive</h1>
       <p>This is a page where you can search many of my tweets, get a link to an archived version, and view all the content in nice, threaded form where applicable. This does not include replies to other people in this archive, so this is just "standalone" tweets and threads.</p>
       <div class="tweet">
+        <p id="tabs">
+          <button class="tab active" id="search-tab" onclick="searchTab()">Search</button><button class="tab" id="browse-tab" onclick="browseTab()">Browse</button>
+        </p>
+        <hr class="hr">
         <p id="loading">Loading search...</p>
         <div id="search" hidden>
           <input id="search-input" type="search" />
           <div id="sorting">Sort by: <button class="sort-button" onclick="sortResults('most-relevant')">most relevant</button> | <button class="sort-button" onclick="sortResults('oldest-first')">oldest first</button> | <button class="sort-button" onclick="sortResults('newest-first')">newest first</button> | <button class="sort-button" onclick="sortResults('most-popular')">most popular</button></div>
           <div id="output"></div>
+        </div>
+        <div id="browse" hidden>
+          <div id="browse-sort">Sort by: <button class="sort-button-browse" onclick="sortResults('oldest-first-browse')">oldest first</button> | <button class="sort-button-browse" onclick="sortResults('newest-first-browse')">newest first</button> | <button class="sort-button" onclick="sortResults('most-popular-browse')">most popular</button></div>
+          <p id="paging">Page <input id="page-num" type="number" /> of <span id="page-total">...</span> </p>
+          <div id="browse-output"></div>
         </div>
       </div>
       <p>This site was made with <a href="https://tinysubversions.com/twitter-archive/make-your-own/">this Twitter archiving tool</a>.</p>
