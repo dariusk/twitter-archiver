@@ -610,9 +610,7 @@ document.getElementById('page-num').min = 1;
 function renderBrowse() {
   const output = browseDocuments.slice(browseIndex, browseIndex + pageSize).map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
   document.getElementById('browse-output').innerHTML = output.join('');
-  if (results.length > 0) {
-    document.getElementById('browse-output').innerHTML += '<a href="#tabs">top &uarr;</a>';
-  }
+  document.getElementById('browse-output').innerHTML += '<a href="#tabs">top &uarr;</a>';
 }
 
 renderBrowse();`;
