@@ -52,7 +52,8 @@ function formatTweet(tweet) {
           .reduce((prev, current) => (+prev.bitrate > +current.bitrate) ? prev : current);
         const fileNameMatch = video.url.match(/(?:.+\/)(.+)\??/);
         const newUrl = `${directoriesDisabled ? '../' : ''}../../tweets_media/${tweet.id_str || tweet.id}-${fileNameMatch ? fileNameMatch[1] : ''}`;
-        medias.push(`<li><video controls src="${newUrl}"></video></li>`);
+        const loop = (media.type === 'animated_gif') ? 'loop ' : ''
+        medias.push(`<li><video controls ${loop}src="${newUrl}"></video></li>`);
       }
     }
     tweet.full_text = tweet.full_text.replace(tweet.extended_entities.media[0].url, `<div class="gallery"><ul>${medias.join('')}</ul></div>`);
