@@ -11,7 +11,7 @@ function makeOpenGraph(tweet, accountInfo) {
       const fileNameMatch = firstMedia.media_url.match(/(?:.+\/)(.+)/);
       mediaUrl = `${baseUrl}/${accountInfo.userName}/tweets_media/${tweet.id_str || tweet.id}-${fileNameMatch ? fileNameMatch[1] : ''}`;
     }
-    if (firstMedia.type === 'video') {
+    if (firstMedia.type === 'video' || firstMedia.type === 'animated_gif') {
       const variantVideos = firstMedia.video_info.variants.filter(item => item.content_type === 'video/mp4');
       const video = variantVideos
         .filter(item => item.bitrate)
@@ -45,14 +45,15 @@ function formatTweet(tweet) {
         const newUrl = `${directoriesDisabled ? '../' : ''}../../tweets_media/${tweet.id_str || tweet.id}-${fileNameMatch ? fileNameMatch[1] : ''}`;
         medias.push(`<li><a href="${newUrl}"><img src="${newUrl}"></a></li>`);
       }
-      if (media.type === 'video') {
+      if (media.type === 'video' || media.type === 'animated_gif') {
         const variantVideos = media.video_info.variants.filter(item => item.content_type === 'video/mp4');
         const video = variantVideos
           .filter(item => item.bitrate)
           .reduce((prev, current) => (+prev.bitrate > +current.bitrate) ? prev : current);
         const fileNameMatch = video.url.match(/(?:.+\/)(.+)\??/);
         const newUrl = `${directoriesDisabled ? '../' : ''}../../tweets_media/${tweet.id_str || tweet.id}-${fileNameMatch ? fileNameMatch[1] : ''}`;
-        medias.push(`<li><video controls src="${newUrl}"></video></li>`);
+        const loop = (media.type === 'animated_gif') ? 'loop ' : ''
+        medias.push(`<li><video controls ${loop}src="${newUrl}"></video></li>`);
       }
     }
     tweet.full_text = tweet.full_text.replace(tweet.extended_entities.media[0].url, `<div class="gallery"><ul>${medias.join('')}</ul></div>`);
