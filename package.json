@@ -1,0 +1,22 @@
+{
+  "name": "twitter-archiver",
+  "description": "Make your own simple, public, searchable Twitter archive",
+  "version": "1.0.0",
+  "scripts": {
+    "dist": "copyfiles app.js FileSaver.min.js FileSaver.min.js.map htaccess.txt index.html jszip.js LICENSE.md dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcclure/twitter-archiver"
+  },
+  "keywords": [],
+  "author": "Darius Kazemi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/monatheoctocat/my_package/issues"
+  },
+  "homepage": "https://tinysubversions.com/twitter-archive/make-your-own/",
+  "devDependencies": {
+    "copyfiles": "^2.4.1"
+  }
+}
