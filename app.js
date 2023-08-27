@@ -1,4 +1,5 @@
-const directoriesDisabled = document.getElementById('disable-directories').checked;
+const webEnvironment =typeof document !== "undefined"
+const directoriesDisabled = webEnvironment && document.getElementById('disable-directories').checked;
 console.log('loaded...');
 function makeOpenGraph(tweet, accountInfo) {
   // trim trailing slash if included by user
