@@ -18,6 +18,7 @@
   },
   "homepage": "https://tinysubversions.com/twitter-archive/make-your-own/",
   "devDependencies": {
+    "commander": "^11.0.0",
     "copyfiles": "^2.4.1"
   }
 }

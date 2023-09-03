@@ -13,3 +13,11 @@ The following commands work:
     npm run dist
 
 Compiles the website (I.E., Darius's original version) into a directory named dist/.
+
+    npm run exec -- path/to/input.zip path/to/output.zip -b
+
+Runs the site generator from the command line. The -- is significant.
+
+    npm run exec -- --help
+
+Prints site generator command line flags.
