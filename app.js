@@ -335,11 +335,9 @@ function parseZip() {
   document.getElementById('loading').hidden = false;
   $output.innerHTML += `<p>Starting...</p>`;
   document.querySelectorAll('body')[0].scrollIntoView(false);
-  const dateBefore = new Date();
   function handleFile(f) {
     JSZip.loadAsync(f)
       .then(zip => {
-        const dateAfter = new Date();
         zip.file('data/manifest.js').async("string").then(function(content) {
           eval(content);
           const tweetFiles = window.__THAR_CONFIG.dataTypes.tweets.files;
