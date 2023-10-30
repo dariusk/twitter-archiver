@@ -337,6 +337,16 @@ body {
 #paging {
   margin: 8px 0;
 }`;
+function getProfileImageUrl(twitterUrl, accountId) {
+  if (!twitterUrl) return;
+
+  const parts = twitterUrl.split('/');
+
+  if (!parts.length) return;
+
+  const lastPart = parts[parts.length - 1];
+
+  return `${accountId}-${lastPart}`;
 }
 
 function parseZip() {
@@ -348,15 +358,25 @@ function parseZip() {
   function handleFile(f) {
     JSZip.loadAsync(f)
       .then(zip => {
+        zip.file('data/profile.js').async("string").then(function(content) {
+          window.YTD.profile = {};
+          eval(content);
+        })
         zip.file('data/manifest.js').async("string").then(function(content) {
           eval(content);
           const tweetFiles = window.__THAR_CONFIG.dataTypes.tweets.files;
           const userName = window.__THAR_CONFIG.userInfo.userName;
           const displayName = window.__THAR_CONFIG.userInfo.displayName;
           const accountId = window.__THAR_CONFIG.userInfo.accountId;
+          const descriptionBio = window.YTD.profile.part0?.[0]?.profile?.description?.bio;
+          const descriptionWebsite = window.YTD.profile.part0?.[0]?.profile?.description?.website;
+          const descriptionLocation = window.YTD.profile.part0?.[0]?.profile?.description?.location;
+          const avatarMediaUrl = getProfileImageUrl(window.YTD.profile.part0?.[0]?.profile?.avatarMediaUrl, accountId);
+          const avatarFileName = avatarMediaUrl ? `avatar.${avatarMediaUrl.replace(/^.*\./, '')}` : null;
           const accountInfo = {
-            userName, displayName, accountId,
+            userName, displayName, accountId, descriptionBio, descriptionWebsite, descriptionLocation, avatarFileName
           };
+
           // set up for grabbing all the tweet data
           let promises = [];
           for (const file of tweetFiles) {
@@ -371,6 +391,14 @@ function parseZip() {
           Promise.all(promises).then(values => {
             // when done...
             const siteZip = new JSZip();
+
+            if (avatarMediaUrl) {
+              siteZip.file(
+                avatarFileName,
+                zip.file(`data/profile_media/${avatarMediaUrl}`).async('blob'),
+              );
+            }
+
 						siteZip.file(`styles.css`, makeStyles());
             // flatten the arrays of tweets into one big array
             tweets = [];
