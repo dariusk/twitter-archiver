@@ -82,23 +82,27 @@ function makeTweet(tweet, accountInfo, threadStatus) {
   // now render this main tweet
   const article = `
   	  <article class="tweet ${threadStatus === 'parent' ? 'parent' : ''} ${threadStatus === 'child' ? 'child' : ''}" ${threadStatus === 'main' ? 'id="main"' : ''}>
-  	    <p class="display_name">
-  	      ${accountInfo.displayName}
-  	    </p>
-  	    <p class="user_name">
-  	      @${accountInfo.userName}
-  	    </p>
-  	    <p class="full_text">
-  	      ${tweet.full_text}
-  	    </p>
-  	    <p class="created_at">
-  	      ${new Date(tweet.created_at).toLocaleString()}
-  	    </p>
-  	    <p class="favorite_count">Favs: ${tweet.favorite_count}</p>
-  	    <p class="retweet_count">Retweets: ${tweet.retweet_count}</p>
-  	    <a class="permalink" href="../${tweet.id_str}">link</a>
+        <div class="search_item">
+          <div class="user">
+            <div class="user_avatar"><img src="../../../${accountInfo.avatarFileName}"></div>
+            <div class="user_text">
+              <div class="user_name">${accountInfo.displayName}</div>
+              <div class="user_infoline">
+                <div class="user_handle"><span>@</span>${accountInfo.userName}</div>
+                <div class="search_time">${new Date(tweet.created_at).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          <div class="full_text">
+            ${tweet.full_text}
+          </div>
+          <div class="scorecard">
+            <div class="favorite_count"><em>${tweet.favorite_count}</em> Likes</div>
+            <div class="retweet_count"><em>${tweet.retweet_count}</em> Retweets</div>
+          </div>
+        </div>
   	  </article>
-`;
+  `;
   articles.push(article);
   // now check if there are children and render those, but only if we are not traversing the parent tree!
   if (threadStatus !== 'parent' && tweet.children && tweet.children.length > 0) {
@@ -152,30 +156,112 @@ document.getElementById('main').scrollIntoView();
 
 function makeStyles() {
   return `
+:root {
+  --bg: rgb(255, 255, 255);
+  --bg-contrast: rgb(207, 217, 222);
+  --fg: rgb(15, 20, 25);
+  --fg-contrast: rgb(39, 44, 48);
+  --fg-lite: rgb(83, 100, 113);
+  --highlight: rgb(29, 155, 240);
+
+  --font-size-small: 15px;
+  --font-size: 17px;
+  --font-size-large: 24px;
+  --radius: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: rgb(15, 20, 25);
+    --bg-contrast: rgb(39, 44, 48);
+    --fg: rgb(255, 255, 255);
+    --fg-contrast: rgb(207, 217, 222);
+    --highlight: rgb(29, 155, 240);
+  }
+}
+
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 1.2em;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: var(--font-size);
+  background-color: var(--bg);
+  color: var(--fg);
+}
+a {
+  color: var(--highlight);
+  text-decoration: none;
+  text-decoration-color: var(--highlight);
+  font-family: inherit;
+}
+a:hover {
+  color: var(--highlight);
+  text-decoration: underline;
+}
+a:visited {
+  color: var(--highlight);
 }
 #search-input {
-  font-size: 1.5em;
-  width: 100%;
+  font-size: var(--font-size-large);
+  border-radius: var(--radius);
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
 }
+.search_item {
+  background-color: var(--bg);
+  padding: 24px 18px;
+  margin-top: 12px;
+}
+.search_item.sep:first-child {
+  border-top: 1px solid var(--bg-contrast);
+}
+.search_item.sep {
+  border-bottom: 1px solid var(--bg-contrast);
+}
+
 .search_time {
-  margin-top: 4px;
+  font-size: var(--font-size-small);
+  color: var(--fg-contrast);
 }
+.search_time::before {
+  content: "•";
+  padding-right: 6px;
+}
+.search_time a {
+  text-decoration-color: var(--fg-lite);
+  color: var(--fg-lite);
+}
+.search_time a:visited {
+  color: var(--fg-lite);
+}
+
 .search_text {
   display: inline;
 }
 .search_link {
   display: inline;
 }
-#sorting {
-  margin-top: 8px;
-  line-height: 1.7em;
+.search_divider {
+  display: none;
 }
-.sort-button {
-  font-size: 1.0em;
+
+#sorting,
+#browse-sort {
+  margin: 8px 5% 0 5%;
+  font-size: var(--font-size);
+  color: var(--fg-contrast);
+}
+
+#paging {
+  margin: 8px 5%;
+}
+
+.sort-button,
+.sort-button-browse {
+  font-size: var(--font-size);
+  border: 0;
+  color: var(--fg-contrast);
+  cursor: pointer;
 }
 .wrapper {
   display: block;
@@ -187,14 +273,15 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .tweet {
-    background-color: #e8e8e8;
-    max-width: 600px;
-    padding: 16px;
-    font-family: sans-serif;
-    font-size: 1.2em;
-    border: 2px solid black;
-    border-radius: 16px;
+  max-width: 600px;
+  font-size: var(--font-size);
+  background-color: var(--bg);
+  padding-bottom: 16px;
+  border: 1px solid var(--bg-contrast);
+  border-radius: 5px;
+  overflow: hidden;
 }
 .tweet img {
   max-height: 100%;
@@ -224,9 +311,6 @@ body {
   margin-bottom: 0;
   margin-top: 0;
 }
-.tweet .user_name {
-  margin-top: 4px;
-}
 .tweet .favorite_count {
   display: inline-block;
   margin-bottom: 0;
@@ -246,14 +330,47 @@ body {
   margin-top: 16px;
   margin-left: 64px;
   max-width: calc(600px - 64px);
-  background-color: white;
+  background-color: var(--bg-contrast);
 }
 .parent {
   margin-bottom: 16px;
   margin-right: 64px;
   max-width: calc(600px - 64px);
-  background-color: white;
+  background-color: var(--bg-contrast);
 }
+
+button {
+  background-color: var(--bg-contrast);
+  color: var(--fg);
+}
+input {
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+.favorite_count, .retweet_count {
+  color: var(--fg-lite)
+}
+.favorite_count em {
+  color: var(--fg-contrast);
+  font-style: normal;
+  font-weight: 600;
+  font-size: var(--font-size-small);
+}
+.retweet_count em {
+  color: var(--fg-contrast);
+  font-style: normal;
+  font-weight: 600;
+  font-size: var(--font-size-small);
+}
+.scorecard {
+  margin-top: 24px;
+  margin-bottom: -6px;
+  padding: 12px 0;
+  border-top: 1px solid var(--bg-contrast);
+  border-bottom: 1px solid var(--bg-contrast);
+}
+
 @media screen and (max-width: 599px) {
   .tweet li {
     height: 15vh;
@@ -261,82 +378,64 @@ body {
     flex-grow: 1;
   }
 }
-@media(prefers-color-scheme: dark) {
-  body {
-    background-color: black;
-    color: white;
-  }
-  a {
-    color: #33ff00;
-    text-decoration: none;
-  }
-  a:hover {
-    color: #33ff00;
-    text-decoration: underline;
-  }
-  .tweet {
-    background-color: black;
-    border: 1px solid gray; /*#33ff00;*/
-    border-radius: 5px;
-  }
-  .child {
-    background-color: black;
-  }
-  .parent {
-    background-color: black;
-  }
-  button {
-    background-color: black;
-    color: white;
-  }
-  input {
-    background-color: black;
-    color: white;
-  }
-  .tweet .favorite_count {
-    color: #33ff00;
-  }
-  .tweet .retweet_count {
-    color: #33ff00;
-  }
-  .tweet .created_at {
-    color: #33ff00;
-  }
-}
-#tabs {
-  margin: -16px 0 0;
-}
-.tab:first-child {
-  margin-left: -16px;
-  border-top-left-radius: 16px;
-}
+
 .hr {
-  margin: 0 -16px 16px -16px;
+  visibility: hidden;
 }
 .tab {
   border: none;
-  font-size: 1.2em;
+  box-shadow: inset 0 -2px 0px 0px var(--highlight);
+  font-size: var(--font-size-large);
   cursor: pointer;
   padding: 4px 10px;
-  border-right: 2px solid black;
   box-sizing: border-box;
 }
 .tab.active {
-  text-decoration: underline;
-}
-#browse-sort > button {
-  font-size: 1.0em;
+  box-shadow: none;
+  font-weight: 900;
+  background-color: var(--highlight);
+  color: var(--fg);
 }
 #page-num {
-  font-size: 1.0em;
+  font-size: var(--font-size);
   width: 80px;
 }
-#browse-sort {
-  line-height: 1.7em;
+
+.user {
+  display: flex;
+  margin-bottom: 28px;
 }
-#paging {
-  margin: 8px 0;
-}`;
+.user_avatar {
+  margin-right: 12px;
+}
+.user_avatar img {
+  width: 40px;
+  border-radius: 100%;
+  overflow: hidden;
+}
+.user_text {
+  display: flex;
+  flex-direction: column;
+}
+.user_name {
+  font-weight: 600;
+}
+.user_handle {
+  color: var(--fg-contrast);
+  padding-right: 6px;
+}
+.user_infoline {
+  display: flex;
+  align-items: baseline;
+}
+
+.top-arrow {
+  text-align: right;
+  display: block;
+  margin-right: 16px;
+}
+`;
+}
 function getProfileImageUrl(twitterUrl, accountId) {
   if (!twitterUrl) return;
 
@@ -589,11 +688,32 @@ function sortResults(criterion) {
 }
 
 function renderResults() {
-  const output = results.map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
-  document.getElementById('output').innerHTML = output.join('');
+  const html = getResultsHtml(results);
+  document.getElementById('output').innerHTML = html;
+}
+function getResultsHtml(results) {
+  const output = results.map(item =>
+    \`<div class="search_item sep">\` +
+      \`<div class="user">\` +
+        \`<div class="user_avatar"><img src="${accountInfo.avatarFileName}"></div>\` +
+        \`<div class="user_text">\` +
+          \`<div class="user_name">${accountInfo.displayName}</div>\` +
+          \`<div class="user_infoline">\` +
+            \`<div class="user_handle"><span>@</span>${accountInfo.userName}</div>\` +
+            \`<div class="search_time"><a href="${accountInfo.userName}/status/\${item.id_str}">\${new Date(item.created_at).toLocaleString()}</a></div>\` +
+          \`</div>\` +
+        \`</div>\` +
+      \`</div>\` +
+      \`<div class="search_text">\${item.full_text}</div>\` +
+    \`</div>\` +
+    \`<hr class="search_divider" />\`
+    .replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
+
   if (results.length > 0) {
-    document.getElementById('output').innerHTML += '<a href="#tabs">top &uarr;</a>';
+    output.push('<a class="top-arrow" href="#tabs">top &uarr;</a>');
   }
+
+  return output.join('')
 }
 
 function onSearchChange(e) {
@@ -645,9 +765,8 @@ document.getElementById('page-num').max = pageMax;
 document.getElementById('page-num').min = 1;
 
 function renderBrowse() {
-  const output = browseDocuments.slice(browseIndex, browseIndex + pageSize).map(item => \`<p class="search_item"><div class="search_link"><a href="${accountInfo.userName}/status/\${item.id_str}">link</a></div> <div class="search_text">\${item.full_text}</div><div class="search_time">\${new Date(item.created_at).toLocaleString()}</div><hr class="search_divider" /></p>\`.replace(/\\.\\.\\/\\.\\.\\/tweets_media\\//g,'${accountInfo.userName}/tweets_media/'));
-  document.getElementById('browse-output').innerHTML = output.join('');
-  document.getElementById('browse-output').innerHTML += '<a href="#tabs">top &uarr;</a>';
+  const html = getResultsHtml(browseDocuments.slice(browseIndex, browseIndex + pageSize))
+  document.getElementById('browse-output').innerHTML = html;
 }
 
 renderBrowse();`;
@@ -679,11 +798,11 @@ function makeOutputIndexHtml(accountInfo) {
       <h1>Welcome to the @${accountInfo.userName} Twitter archive</h1>
       <p>This is a page where you can search many of my tweets, get a link to an archived version, and view all the content in nice, threaded form where applicable. This does not include replies to other people in this archive, so this is just "standalone" tweets and threads.</p>
       <div class="tweet">
-        <p id="tabs">
+        <div id="tabs">
           <button class="tab active" id="search-tab" onclick="searchTab()">Search</button><button class="tab" id="browse-tab" onclick="browseTab()">Browse</button>
-        </p>
+        </div>
         <hr class="hr">
-        <p id="loading">Loading search...</p>
+        <div id="loading">Loading search...</div>
         <div id="search" hidden>
           <input id="search-input" type="search" />
           <div id="sorting">Sort by: <button class="sort-button" onclick="sortResults('most-relevant')">most relevant</button> | <button class="sort-button" onclick="sortResults('oldest-first')">oldest first</button> | <button class="sort-button" onclick="sortResults('newest-first')">newest first</button> | <button class="sort-button" onclick="sortResults('most-popular')">most popular</button></div>
@@ -691,7 +810,7 @@ function makeOutputIndexHtml(accountInfo) {
         </div>
         <div id="browse" hidden>
           <div id="browse-sort">Sort by: <button class="sort-button-browse" onclick="sortResults('oldest-first-browse')">oldest first</button> | <button class="sort-button-browse" onclick="sortResults('newest-first-browse')">newest first</button> | <button class="sort-button" onclick="sortResults('most-popular-browse')">most popular</button></div>
-          <p id="paging">Page <input id="page-num" type="number" /> of <span id="page-total">...</span> </p>
+          <div id="paging">Page <input id="page-num" type="number" /> of <span id="page-total">...</span> </div>
           <div id="browse-output"></div>
         </div>
       </div>
