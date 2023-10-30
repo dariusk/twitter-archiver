@@ -122,6 +122,15 @@ function makePage(tweet, accountInfo) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   ${makeOpenGraph(tweet, accountInfo)}
   <title>${tweet.title}</title>
+
+  <!-- Load web fonts; Inter is close to Twitter's proprietary Chirp -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="../../../styles.css">
 </head>
 <body>
@@ -144,7 +153,8 @@ document.getElementById('main').scrollIntoView();
 function makeStyles() {
   return `
 body {
-  font-family: sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 1.2em;
 }
 #search-input {
@@ -624,6 +634,15 @@ function makeOutputIndexHtml(accountInfo) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@${accountInfo.userName} Twitter archive</title>
+
+  <!-- Load web fonts; Inter is close to Twitter's proprietary Chirp -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
