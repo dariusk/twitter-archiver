@@ -17,6 +17,18 @@ const [input, output] = [program.args[0], program.args[1]];
 
 //console.log(input, output, options.baseUrl, options.disableDirectories);
 
-let fallback = (msg) => { console.log(msg); }
-let doneFailure = (msg) => { console.log("Error!", msg); }
-app.parseZip({callback:{fallback, doneFailure}})
+// Converter file -> blob
+// thanks easrng on mastodon
+const fs = require("fs")
+const stream = require("stream")
+const readBlob = async (path) =>
+  await new Response(stream.Readable.toWeb(fs.createReadStream(path))).blob();
+
+async function run() { // Must function wrap so we can use async at toplevel
+  const blob = await readBlob(input)
+
+  let fallback = (msg) => { console.log(msg); }
+  let doneFailure = (msg) => { console.log("Error!", msg); }
+  app.parseZip([blob], {callback:{fallback, doneFailure}})
+}
+run();

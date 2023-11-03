@@ -329,7 +329,7 @@ body {
 }`;
 }
 
-function parseZip({callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia}}) {
+function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia}}) {
   (starting || fallback)("Starting...");
   const dateBefore = new Date();
   function handleFile(f) {
@@ -444,14 +444,13 @@ function parseZip({callback:{fallback, starting, filtering, makingThreads, makin
         const $output = document.getElementById('output');
         $output.innerHTML = `<p class="error">Error! ${error.toString()}</p>`;
         if (error.toString().includes('TypeError')) {
-          (doneFailure || fallback)(`I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.`;
+          (doneFailure || fallback)(`I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.`);
         }
         if (error.toString().includes('Corrupted')) {
-          (doneFailure || fallback)(`I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.`;
+          (doneFailure || fallback)(`I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.`);
         }
       });
   }
-  let files = document.getElementById('file').files;
   for (const file of files) {
     handleFile(file);
   }
@@ -473,7 +472,7 @@ function parseZipHtml() {
     document.getElementById('loading').hidden = true;
     document.querySelectorAll('body')[0].scrollIntoView(false);
   }
-  parseZip({callback:{starting, fallback, doneFailure}});
+  parseZip(document.getElementById('file').files, {callback:{starting, fallback, doneFailure}});
 }
 
 function makeOutputAppJs(accountInfo) {
