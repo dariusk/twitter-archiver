@@ -1,5 +1,5 @@
 const webEnvironment =typeof document !== "undefined"
-const directoriesDisabled = webEnvironment && document.getElementById('disable-directories').checked;
+let directoriesDisabled = webEnvironment && document.getElementById('disable-directories').checked;
 console.log('loaded...');
 
 let baseUrlOverride = null
@@ -332,10 +332,12 @@ body {
 }`;
 }
 
-function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure, doneSuccess}, baseUrl, saveAs}) {
+function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure, doneSuccess}, baseUrl, saveAs, directoriesDisabled}) {
   baseUrlOverride = baseUrl;
   if (saveAs)
     global.saveAs = saveAs;
+  if (directoriesDisabled != null)
+    global.directoriesDisabled = directoriesDisabled;
 
   (starting || fallback)("Starting...");
   const dateBefore = new Date();

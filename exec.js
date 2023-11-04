@@ -34,7 +34,8 @@ async function run() { // Must function wrap so we can use async at toplevel
   let doneSuccess = (msg) => { console.log("Success. Here is a message from Darius that may not apply to you:\n", msg)};
   app.parseZip([bufferPromise], {
     callback:{fallback, doneFailure, doneSuccess},
-    baseUrl:options.baseurl || '',
+    baseUrl:options.baseUrl || '',
+    directoriesDisabled:options.disableDirectories;
     saveAs:(blob, filename) => blob.arrayBuffer().then(arrayBuffer=>fs.writeFileSync(output, Buffer.from(arrayBuffer)))});
 }
 run();
