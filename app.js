@@ -1,8 +1,12 @@
-const directoriesDisabled = document.getElementById('disable-directories').checked;
+const webEnvironment =typeof document !== "undefined"
+let directoriesDisabled = webEnvironment && document.getElementById('disable-directories').checked;
 console.log('loaded...');
+
+let baseUrlOverride = null
+
 function makeOpenGraph(tweet, accountInfo) {
   // trim trailing slash if included by user
-  const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/,'');
+  const baseUrl = baseUrlOverride != null ? baseUrlOverride : document.getElementById('baseUrl').value.replace(/\/$/,'');
   let mediaUrl = '';
   let firstMedia = null;
   if (tweet.extended_entities && tweet.extended_entities.media && tweet.extended_entities.media.length > 0) {
@@ -329,20 +333,28 @@ body {
 }`;
 }
 
-function parseZip() {
-  console.log('starting...');
-  const $output = document.getElementById('output');
-  document.getElementById('loading').hidden = false;
-  $output.innerHTML += `<p>Starting...</p>`;
-  document.querySelectorAll('body')[0].scrollIntoView(false);
+function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure, doneSuccess}, baseUrl, saveAs, directoriesDisabled}) {
+  baseUrlOverride = baseUrl;
+  if (saveAs)
+    global.saveAs = saveAs;
+  if (directoriesDisabled != null)
+    global.directoriesDisabled = directoriesDisabled;
+
+  (starting || fallback)("Starting...");
   const dateBefore = new Date();
   function handleFile(f) {
+    if (typeof JSZip == "undefined")
+      JSZip = require("jszip");
     JSZip.loadAsync(f)
       .then(zip => {
         const dateAfter = new Date();
         zip.file('data/manifest.js').async("string").then(function(content) {
+          if (typeof window == "undefined")
+            window = {YTD:{tweet:{}}};
           eval(content);
-          const tweetFiles = window.__THAR_CONFIG.dataTypes.tweets.files;
+          const tweetFiles = typeof window.__THAR_CONFIG.dataTypes.tweets == "undefined" ?
+            window.__THAR_CONFIG.dataTypes.tweet.files :
+            window.__THAR_CONFIG.dataTypes.tweets.files;
           const userName = window.__THAR_CONFIG.userInfo.userName;
           const displayName = window.__THAR_CONFIG.userInfo.displayName;
           const accountId = window.__THAR_CONFIG.userInfo.accountId;
@@ -366,9 +378,10 @@ function parseZip() {
 						siteZip.file(`styles.css`, makeStyles());
             // flatten the arrays of tweets into one big array
             tweets = [];
-            $output.innerHTML += `<p>Filtering and flattening tweets...</p>`;
-            for (const wrapper of Object.keys(window.YTD.tweets)) {
-              for (const data of window.YTD.tweets[wrapper]) {
+            (filtering || fallback)("Filtering and flattening tweets...");
+            const windowTweets = typeof window.YTD.tweets == "undefined" ? window.YTD.tweet : window.YTD.tweets;
+            for (const wrapper of Object.keys(windowTweets)) {
+              for (const data of windowTweets[wrapper]) {
                 const tweet = data.tweet;
                 // only save tweets that are original tweets or replies to myself
                 if (!tweet.in_reply_to_user_id_str || tweet.in_reply_to_user_id_str === accountId.toString()) {
@@ -376,7 +389,7 @@ function parseZip() {
                 }
               }
             }
-            $output.innerHTML += `<p>Setting up threading metadata...</p>`;
+            (makingThreads || fallback)("Setting up threading metadata...");
             // iterate once through every tweet to set up the children array
             // so if something I wrote has two direct replies that I wrote, it will have an array size 2 with each ID of the two child replies
             for (const tweet of tweets) {
@@ -392,8 +405,7 @@ function parseZip() {
                 }
               }
             }
-            $output.innerHTML += `<p>Making all the HTML pages...</p>`;
-            document.querySelectorAll('body')[0].scrollIntoView(false);
+            (makingHtml || fallback)("Making all the HTML pages...");
             for (const tweet of tweets) {
                 let id = tweet.id_str || tweet.id;
                 if (directoriesDisabled) {
@@ -402,8 +414,7 @@ function parseZip() {
                   siteZip.file(`${userName}/status/${id}/index.html`, makePage(tweet, accountInfo));
                 }
             }
-            $output.innerHTML += `<p>Setting up the search documents...</p>`;
-            document.querySelectorAll('body')[0].scrollIntoView(false);
+            (makingSearch || fallback)("Making all the HTML pages...");
             const searchDocuments = tweets
               .filter(tweet => tweet.full_text.substr(0,4) !== 'RT @')
               .map(tweet => {
@@ -418,8 +429,7 @@ function parseZip() {
             siteZip.file(`searchDocuments.js`, 'const searchDocuments = ' + JSON.stringify(searchDocuments));
             siteZip.file(`app.js`, makeOutputAppJs(accountInfo));
             siteZip.file(`index.html`, makeOutputIndexHtml(accountInfo));
-            $output.innerHTML += `<p>Dropping in all your media files...</p>`;
-            document.querySelectorAll('body')[0].scrollIntoView(false);
+            (makingMedia || fallback)("Dropping in all your media files...");
             zip.folder('data/tweets_media').forEach((relativePath, file) => {
               // only include this in the archive if it's original material we posted (not RTs)
               // grab the tweet id from the filename
@@ -441,31 +451,44 @@ function parseZip() {
             siteZip.generateAsync({ type: 'blob' }).then(blob => {
               saveAs(blob, 'archive.zip');
               console.log('DONE');
-              document.getElementById('loading').hidden = true;
-              $output.innerHTML += `<p><strong>DONE!!!</strong> Check your browser downloads for "archive.zip", and then unzip it on a web server somewhere. <em>It is likely to be much smaller than your original zip because it won't have media for stuff you retweeted.</em> I highly recommend that you upload the zip file itself to the server and unzip it once it's there. That way your file transfer will go much faster than if you try to unzip it localy and then upload 100k files. If you are using something like cPanel on your host, I believe most versions of that let you unzip a file you've uploaded somewhere in the user interface.</p>`;
-              document.querySelectorAll('body')[0].scrollIntoView(false);
+              (doneSuccess || fallback)(`<strong>DONE!!!</strong> Check your browser downloads for "archive.zip", and then unzip it on a web server somewhere. <em>It is likely to be much smaller than your original zip because it won't have media for stuff you retweeted.</em> I highly recommend that you upload the zip file itself to the server and unzip it once it's there. That way your file transfer will go much faster than if you try to unzip it localy and then upload 100k files. If you are using something like cPanel on your host, I believe most versions of that let you unzip a file you've uploaded somewhere in the user interface.`);
             }, err => { console.log('ERR', err);
-              $output.innerHTML += `<p><strong>ERROR!</strong> ${err.toString()}</p>`;
-              document.querySelectorAll('body')[0].scrollIntoView(false);
+              (doneFailure || fallback)(err.toString());
             });
           });
         });
       }).catch(error => {
-        const $output = document.getElementById('output');
-        document.getElementById('loading').hidden = true;
-        $output.innerHTML = `<p class="error">Error! ${error.toString()}</p>`;
+        (doneFailure || fallback)(`Error! ${error.toString()}`);
         if (error.toString().includes('TypeError')) {
-          $output.innerHTML += `<p>I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.</p>`;
+          (doneFailure || fallback)(`I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.`);
         }
         if (error.toString().includes('Corrupted')) {
-          $output.innerHTML += `<p>I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.</p>`;
+          (doneFailure || fallback)(`I am guessing that your archive is too big! If it's more than 2GB you're likely to see this error. If you look above at the "Known problems" section, you'll see a potential solution. Sorry it is a bit of a pain in the ass.`);
         }
       });
   }
-  let files = document.getElementById('file').files;
   for (const file of files) {
     handleFile(file);
   }
+}
+
+function parseZipHtml() {
+  $output = document.getElementById('output');
+  let fallback = (msg) => {
+    $output.innerHTML += `<p>${msg}</p>`;
+    document.querySelectorAll('body')[0].scrollIntoView(false);
+  }
+  let starting = (msg) => {
+    console.log('starting...');
+    document.getElementById('loading').hidden = false;
+    fallback(msg);
+  }
+  let doneFailure = (msg) => {
+    $output.innerHTML += `<p class="error">Error! ${msg}</p>`;
+    document.getElementById('loading').hidden = true;
+    document.querySelectorAll('body')[0].scrollIntoView(false);
+  }
+  parseZip(document.getElementById('file').files, {callback:{starting, fallback, doneFailure}});
 }
 
 function makeOutputAppJs(accountInfo) {
@@ -660,3 +683,5 @@ function makeOutputIndexHtml(accountInfo) {
 </html>`;
   return outputIndexHtml;
 }
+
+if (typeof module !== "undefined") module.exports = {parseZip}
