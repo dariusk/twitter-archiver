@@ -1,9 +1,12 @@
 const webEnvironment =typeof document !== "undefined"
 const directoriesDisabled = webEnvironment && document.getElementById('disable-directories').checked;
 console.log('loaded...');
+
+let baseUrlOverride = null
+
 function makeOpenGraph(tweet, accountInfo) {
   // trim trailing slash if included by user
-  const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/,'');
+  const baseUrl = baseUrlOverride != null ? baseUrlOverride : document.getElementById('baseUrl').value.replace(/\/$/,'');
   let mediaUrl = '';
   let firstMedia = null;
   if (tweet.extended_entities && tweet.extended_entities.media && tweet.extended_entities.media.length > 0) {
@@ -329,18 +332,26 @@ body {
 }`;
 }
 
-function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure}}) {
+function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure, doneSuccess}, baseUrl, saveAs}) {
+  baseUrlOverride = baseUrl;
+  if (saveAs)
+    global.saveAs = saveAs;
+
   (starting || fallback)("Starting...");
   const dateBefore = new Date();
   function handleFile(f) {
     if (typeof JSZip == "undefined")
-      JSZip = require("jszip")
+      JSZip = require("jszip");
     JSZip.loadAsync(f)
       .then(zip => {
         const dateAfter = new Date();
         zip.file('data/manifest.js').async("string").then(function(content) {
+          if (typeof window == "undefined")
+            window = {YTD:{tweet:{}}};
           eval(content);
-          const tweetFiles = window.__THAR_CONFIG.dataTypes.tweets.files;
+          const tweetFiles = typeof window.__THAR_CONFIG.dataTypes.tweets == "undefined" ?
+            window.__THAR_CONFIG.dataTypes.tweet.files :
+            window.__THAR_CONFIG.dataTypes.tweets.files;
           const userName = window.__THAR_CONFIG.userInfo.userName;
           const displayName = window.__THAR_CONFIG.userInfo.displayName;
           const accountId = window.__THAR_CONFIG.userInfo.accountId;
@@ -365,8 +376,9 @@ function parseZip(files, {callback:{fallback, starting, filtering, makingThreads
             // flatten the arrays of tweets into one big array
             tweets = [];
             (filtering || fallback)("Filtering and flattening tweets...");
-            for (const wrapper of Object.keys(window.YTD.tweets)) {
-              for (const data of window.YTD.tweets[wrapper]) {
+            const windowTweets = typeof window.YTD.tweets == "undefined" ? window.YTD.tweet : window.YTD.tweets;
+            for (const wrapper of Object.keys(windowTweets)) {
+              for (const data of windowTweets[wrapper]) {
                 const tweet = data.tweet;
                 // only save tweets that are original tweets or replies to myself
                 if (!tweet.in_reply_to_user_id_str || tweet.in_reply_to_user_id_str === accountId.toString()) {
