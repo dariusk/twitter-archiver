@@ -20,5 +20,8 @@
   "devDependencies": {
     "commander": "^11.0.0",
     "copyfiles": "^2.4.1"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
   }
 }

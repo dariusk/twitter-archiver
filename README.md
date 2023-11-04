@@ -8,13 +8,15 @@ Feel free to hack on this if you want it to generate different output than what 
 
 This version has been modified to run as an npm app rather than a website. (Andi considers these changes trivial, and so any alterations from the Darius version in this repo you may consider public domain/Creative Commons Zero).
 
+The script version relies on web compatibility features, and so requires a relatively new Node. I am using 18.16.1.
+
 The following commands work:
 
     npm run dist
 
 Compiles the website (I.E., Darius's original version) into a directory named dist/.
 
-    npm run exec -- path/to/input.zip path/to/output.zip -b
+    npm run exec -- path/to/input.zip path/to/output.zip -b http://site-youll-install-on.com/
 
 Runs the site generator from the command line. The -- is significant.
 

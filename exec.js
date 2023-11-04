@@ -28,7 +28,7 @@ async function run() { // Must function wrap so we can use async at toplevel
   const blob = await readBlob(input)
 
   let fallback = (msg) => { console.log(msg); }
-  let doneFailure = (msg) => { console.log("Error!", msg); }
+  let doneFailure = (e) => { console.log("Error!", e, e.stack); }
   app.parseZip([blob], {callback:{fallback, doneFailure}})
 }
 run();

@@ -329,10 +329,12 @@ body {
 }`;
 }
 
-function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia}}) {
+function parseZip(files, {callback:{fallback, starting, filtering, makingThreads, makingHtml, makingSearch, makingMedia, doneFailure}}) {
   (starting || fallback)("Starting...");
   const dateBefore = new Date();
   function handleFile(f) {
+    if (typeof JSZip == "undefined")
+      JSZip = require("jszip")
     JSZip.loadAsync(f)
       .then(zip => {
         const dateAfter = new Date();
@@ -441,8 +443,7 @@ function parseZip(files, {callback:{fallback, starting, filtering, makingThreads
           });
         });
       }).catch(error => {
-        const $output = document.getElementById('output');
-        $output.innerHTML = `<p class="error">Error! ${error.toString()}</p>`;
+        (doneFailure || fallback)(`Error! ${error.toString()}`);
         if (error.toString().includes('TypeError')) {
           (doneFailure || fallback)(`I am guessing that your zip file is missing some files. It is also possible that you unzipped and re-zipped your file and the data is in an extra subdirectory. Check out the "Known problems" section above. You'll need the "data" directory to be in the zip root, not living under some other directory.`);
         }
